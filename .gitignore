@@ -1,0 +1,6 @@
+node_modules
+dist
+forum.sqlite
+.env
+.env.local
+Old

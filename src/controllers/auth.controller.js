@@ -27,6 +27,7 @@ export const register = async (req, res) => {
     const token = jwt.sign({ id: result.lastID, username, role, domain, avatar, userType: finalUserType }, JWT_SECRET);
     res.status(201).json({ token, user: { id: result.lastID, username, avatar, role, domain, userType: finalUserType } });
   } catch (err) {
+    console.error('Register error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -44,6 +45,7 @@ export const login = async (req, res) => {
     const token = jwt.sign({ id: user.id, username: user.username, role: user.role, domain: user.domain, description: user.description, avatar: user.avatar, userType: user.userType }, JWT_SECRET);
     res.json({ token, user: { id: user.id, username: user.username, avatar: user.avatar, role: user.role, domain: user.domain, description: user.description, userType: user.userType } });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 };

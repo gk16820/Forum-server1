@@ -23,6 +23,27 @@ function convertQuery(sql, params = []) {
   pgSql = pgSql.replace(/ COLLATE NOCASE/gi, '');
   // 2. Replace LIKE with ILIKE for case-insensitive text search
   pgSql = pgSql.replace(/\bLIKE\b/gi, 'ILIKE');
+
+  // 2b. Quote camelCase identifiers that are case-sensitive in PostgreSQL.
+  const caseSensitiveColumns = [
+    'userType',
+    'createdAt',
+    'userId',
+    'postId',
+    'parentId',
+    'followerId',
+    'followingId',
+    'actorId',
+    'isRead',
+    'communityId',
+    'joinedAt',
+    'createdBy'
+  ];
+  for (const column of caseSensitiveColumns) {
+    const columnRegex = new RegExp(`(?<!")\\b${column}\\b(?!")`, 'g');
+    pgSql = pgSql.replace(columnRegex, `"${column}"`);
+  }
+
   // 3. Replace SQLite STRFTIME popularity formula with PostgreSQL equivalent
   pgSql = pgSql.replace(
     /\(\(p\.upvotes \* 10\) \+ p\.views \+ \(p\.comments \* 5\)\) \/ CAST\(\(\(STRFTIME\('%s', 'now'\) - STRFTIME\('%s', p\.createdAt\)\) \/ 3600\.0\) \+ 2\.0 AS REAL\)/gi,

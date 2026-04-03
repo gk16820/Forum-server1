@@ -292,9 +292,26 @@ export async function initDb() {
   if (databaseUrl) {
     // ── Production: PostgreSQL (Supabase) ───────────────────────────────────
     console.log('[db] Connecting to PostgreSQL (Supabase)...');
+
+    // Default to compatibility mode for Supabase/Vercel TLS chains.
+    // Set PGSSL_REJECT_UNAUTHORIZED=true to enforce strict cert validation.
+    const strictSsl = process.env.PGSSL_REJECT_UNAUTHORIZED === 'true';
+    const sslConfig = { rejectUnauthorized: strictSsl };
+
+    let normalizedConnectionString = databaseUrl;
+    try {
+      const parsed = new URL(databaseUrl);
+      // Avoid sslmode query overriding explicit ssl config in pg client options.
+      parsed.searchParams.delete('sslmode');
+      normalizedConnectionString = parsed.toString();
+    } catch {
+      // Keep original URL if parsing fails.
+      normalizedConnectionString = databaseUrl;
+    }
+
     const pool = new pg.Pool({
-      connectionString: databaseUrl,
-      ssl: { rejectUnauthorized: false }
+      connectionString: normalizedConnectionString,
+      ssl: sslConfig
     });
 
     await applyPgSchema(pool);

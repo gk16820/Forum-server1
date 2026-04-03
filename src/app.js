@@ -11,12 +11,25 @@ import userRoutes from './routes/user.routes.js';
 
 const app = express();
 
-app.use(cors({
-  origin: '*',
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || 'https://forum-two-weld.vercel.app')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser requests (no Origin header).
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(null, false);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200 // Some legacy browsers and platforms (Vercel) handle 200 better for preflights
-}));
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Ensure DB is initialized for serverless environments (Vercel)
 app.use(async (req, res, next) => {
